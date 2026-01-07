@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "configkit"
+version = "1.0.0"
+description = "Singleton-based JSON configuration loader with JSON Schema validation"
+authors = [{ name = "Miichoow" }]
+requires-python = ">=3.9"
+dependencies = [
+    "jsonschema>=4.21.0"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
