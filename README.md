@@ -37,7 +37,7 @@ pip install .
 ### From Git repository
 
 ```bash
-pip install https://github.com/miichoow/ConfigKit.git
+pip install git+https://github.com/miichoow/ConfigKit.git
 ```
 
 ## Basic Usage
