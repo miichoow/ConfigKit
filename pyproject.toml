@@ -4,13 +4,62 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "configkit"
-version = "1.0.0"
-description = "Singleton-based JSON configuration loader with JSON Schema validation"
+version = "1.1.0"
+description = "Thread-safe singleton JSON configuration loader with JSON Schema validation"
+readme = "README.md"
+license = "MIT"
 authors = [{ name = "Miichoow" }]
-requires-python = ">=3.9"
-dependencies = [
-    "jsonschema>=4.21.0"
+keywords = ["configuration", "json", "schema", "validation", "singleton"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
+requires-python = ">=3.9"
+dependencies = ["jsonschema>=4.21.0"]
+
+[project.urls]
+Repository = "https://github.com/miichoow/ConfigKit"
+
+[project.optional-dependencies]
+dev = ["ruff>=0.4.0", "mypy>=1.10.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+configkit = ["py.typed"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "RUF",    # ruff-specific
+]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
