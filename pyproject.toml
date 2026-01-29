@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyConfigKit"
-version = "1.1.0"
+version = "1.0.0"
 description = "Thread-safe singleton JSON configuration loader with JSON Schema validation"
 readme = "README.md"
 license = "MIT"
@@ -13,7 +13,6 @@ keywords = ["configuration", "json", "schema", "validation", "singleton", "confi
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
