@@ -13,21 +13,23 @@ Thread-safe singleton JSON configuration loader with JSON Schema validation for 
 
 ## Installation
 
+### From PyPI
+
+```bash
+pip install pyConfigKit
+```
+
 ### From Git repository
 
 ```bash
 pip install git+https://github.com/miichoow/ConfigKit.git
 ```
 
-### From local directory
-
-```bash
-pip install .
-```
-
 ### Development mode
 
 ```bash
+git clone https://github.com/miichoow/ConfigKit.git
+cd ConfigKit
 pip install -e ".[dev]"
 ```
 
@@ -149,6 +151,14 @@ Metaclass providing singleton behavior.
 - **Single source of truth** - One instance per configuration class
 - **Explicit contracts** - Required files on first instantiation
 - **No magic** - Clear, predictable behavior
+
+## Publishing
+
+```bash
+pip install -e ".[dev]"
+python -m build
+twine upload dist/*
+```
 
 ## License
 

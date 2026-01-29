@@ -3,13 +3,13 @@ requires = ["setuptools>=65", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "configkit"
+name = "pyConfigKit"
 version = "1.1.0"
 description = "Thread-safe singleton JSON configuration loader with JSON Schema validation"
 readme = "README.md"
 license = "MIT"
 authors = [{ name = "Miichoow" }]
-keywords = ["configuration", "json", "schema", "validation", "singleton"]
+keywords = ["configuration", "json", "schema", "validation", "singleton", "config"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -28,13 +28,15 @@ requires-python = ">=3.9"
 dependencies = ["jsonschema>=4.21.0"]
 
 [project.urls]
+Homepage = "https://github.com/miichoow/ConfigKit"
 Repository = "https://github.com/miichoow/ConfigKit"
+Issues = "https://github.com/miichoow/ConfigKit/issues"
 
 [project.optional-dependencies]
-dev = ["ruff>=0.4.0", "mypy>=1.10.0"]
+dev = ["ruff>=0.4.0", "mypy>=1.10.0", "build>=1.0.0", "twine>=5.0.0"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+include = ["configkit*"]
 
 [tool.setuptools.package-data]
 configkit = ["py.typed"]
