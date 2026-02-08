@@ -1,9 +1,10 @@
 # ConfigKit
 
-Thread-safe singleton JSON configuration loader with JSON Schema validation for Python applications.
+Thread-safe singleton JSON/YAML configuration loader with JSON Schema validation for Python applications.
 
 ## Features
 
+- **JSON & YAML support** - Load configuration from `.json`, `.yaml`, or `.yml` files
 - **Thread-safe singleton** - One instance per configuration class
 - **JSON Schema validation** - Draft 2020-12 support via `jsonschema`
 - **Dot-notation access** - `config.get("database.host")`
@@ -69,7 +70,17 @@ class AppConfig(ConfigKit):
 }
 ```
 
-**schema.json**
+**Or config.yaml**
+```yaml
+env: development
+debug: true
+database:
+  host: localhost
+  port: 5432
+  name: myapp
+```
+
+**schema.json** *(schema files are always JSON)*
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -99,8 +110,11 @@ class AppConfig(ConfigKit):
 ### 3. Use in your application
 
 ```python
-# Initialize once at startup
-config = AppConfig(json_file="config.json", schema_file="schema.json")
+# Initialize once at startup (JSON)
+config = AppConfig(config_file="config.json", schema_file="schema.json")
+
+# Or with YAML
+config = AppConfig(config_file="config.yaml", schema_file="schema.json")
 
 # Access anywhere - returns the same instance
 config = AppConfig()
@@ -116,10 +130,10 @@ Base class for configuration. Subclass and implement `additional_checks()`.
 #### Constructor
 
 ```python
-ConfigKit(*, json_file: str | Path, schema_file: str | Path)
+ConfigKit(*, config_file: str | Path, schema_file: str | Path)
 ```
 
-- `json_file` - Path to JSON configuration file
+- `config_file` - Path to configuration file (`.json`, `.yaml`, or `.yml`)
 - `schema_file` - Path to JSON Schema file
 
 #### Properties

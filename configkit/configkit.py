@@ -8,17 +8,20 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
+import yaml
 from jsonschema import Draft202012Validator, ValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+_SUPPORTED_CONFIG_EXTENSIONS = {".json", ".yaml", ".yml"}
 
 
 class ConfigKitMeta(type):
     """Thread-safe singleton metaclass for configuration classes.
 
     Ensures one instance per concrete subclass using double-checked locking.
-    First instantiation requires `json_file` and `schema_file` parameters.
+    First instantiation requires `config_file` and `schema_file` parameters.
     """
 
     _instances: ClassVar[dict[type, ConfigKit]] = {}
@@ -29,9 +32,9 @@ class ConfigKitMeta(type):
         if cls not in cls._instances:
             with cls._lock:
                 if cls not in cls._instances:
-                    if not kwargs.get("json_file") or not kwargs.get("schema_file"):
+                    if not kwargs.get("config_file") or not kwargs.get("schema_file"):
                         raise ValueError(
-                            "First instantiation requires 'json_file' and 'schema_file'"
+                            "First instantiation requires 'config_file' and 'schema_file'"
                         )
                     cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
@@ -44,8 +47,9 @@ class ConfigKitMeta(type):
 
 
 class ConfigKit(metaclass=ConfigKitMeta):
-    """Base class for JSON configuration with schema validation.
+    """Base class for JSON/YAML configuration with schema validation.
 
+    Supports JSON, YAML, and YML configuration files. Schema files must be JSON.
     Subclasses must implement the `additional_checks` method for custom validation.
 
     Example:
@@ -54,23 +58,23 @@ class ConfigKit(metaclass=ConfigKitMeta):
         ...         if self.data.get("debug") and self.data.get("production"):
         ...             raise ValueError("Cannot enable debug in production")
         ...
-        >>> config = AppConfig(json_file="config.json", schema_file="schema.json")
+        >>> config = AppConfig(config_file="config.yaml", schema_file="schema.json")
         >>> config.get("database.host")
         'localhost'
     """
 
-    __slots__ = ("_json_path", "_schema_path", "_data", "_schema")
+    __slots__ = ("_config_path", "_schema_path", "_data", "_schema")
 
     def __init__(
         self,
         *,
-        json_file: str | Path | None = None,
+        config_file: str | Path | None = None,
         schema_file: str | Path | None = None,
     ) -> None:
-        """Initialize configuration from JSON file with schema validation.
+        """Initialize configuration from a JSON or YAML file with schema validation.
 
         Args:
-            json_file: Path to the JSON configuration file.
+            config_file: Path to the configuration file (JSON, YAML, or YML).
             schema_file: Path to the JSON Schema file.
 
         Raises:
@@ -78,10 +82,10 @@ class ConfigKit(metaclass=ConfigKitMeta):
             FileNotFoundError: If files do not exist.
             PermissionError: If files are not readable.
         """
-        if not json_file or not schema_file:
-            raise ValueError("First instantiation requires 'json_file' and 'schema_file'")
+        if not config_file or not schema_file:
+            raise ValueError("First instantiation requires 'config_file' and 'schema_file'")
 
-        self._json_path = Path(json_file)
+        self._config_path = Path(config_file)
         self._schema_path = Path(schema_file)
         self._data: dict[str, Any] = {}
         self._schema: dict[str, Any] = {}
@@ -93,7 +97,7 @@ class ConfigKit(metaclass=ConfigKitMeta):
 
     def __repr__(self) -> str:
         """Return string representation for debugging."""
-        return f"{self.__class__.__name__}(json_file={self._json_path!r})"
+        return f"{self.__class__.__name__}(config_file={self._config_path!r})"
 
     @property
     def data(self) -> dict[str, Any]:
@@ -107,7 +111,7 @@ class ConfigKit(metaclass=ConfigKitMeta):
 
     def _validate_paths(self) -> None:
         """Verify configuration files exist and are readable."""
-        for path in (self._json_path, self._schema_path):
+        for path in (self._config_path, self._schema_path):
             if not path.is_file():
                 raise FileNotFoundError(f"File not found: {path}")
             try:
@@ -117,9 +121,32 @@ class ConfigKit(metaclass=ConfigKitMeta):
                 raise PermissionError(f"File not readable: {path}") from None
 
     def _load(self) -> None:
-        """Load JSON configuration and schema files."""
-        self._data = self._parse_json(self._json_path)
+        """Load configuration and schema files."""
+        self._data = self._parse_config(self._config_path)
         self._schema = self._parse_json(self._schema_path)
+
+    @staticmethod
+    def _parse_config(path: Path) -> dict[str, Any]:
+        """Parse a configuration file based on its extension.
+
+        Args:
+            path: Path to the configuration file.
+
+        Returns:
+            Parsed configuration as dictionary.
+
+        Raises:
+            ValueError: If the file extension is unsupported or contents are malformed.
+        """
+        ext = path.suffix.lower()
+        if ext == ".json":
+            return ConfigKit._parse_json(path)
+        if ext in (".yaml", ".yml"):
+            return ConfigKit._parse_yaml(path)
+        raise ValueError(
+            f"Unsupported config file extension '{ext}'. "
+            f"Supported: {', '.join(sorted(_SUPPORTED_CONFIG_EXTENSIONS))}"
+        )
 
     @staticmethod
     def _parse_json(path: Path) -> dict[str, Any]:
@@ -140,6 +167,28 @@ class ConfigKit(metaclass=ConfigKitMeta):
                 return content
         except json.JSONDecodeError as exc:
             raise ValueError(f"Invalid JSON in '{path}': {exc}") from exc
+
+    @staticmethod
+    def _parse_yaml(path: Path) -> dict[str, Any]:
+        """Parse YAML file and return contents.
+
+        Args:
+            path: Path to YAML file.
+
+        Returns:
+            Parsed YAML as dictionary.
+
+        Raises:
+            ValueError: If YAML is malformed.
+        """
+        try:
+            with path.open(encoding="utf-8") as file:
+                content: dict[str, Any] = yaml.safe_load(file)
+                if not isinstance(content, dict):
+                    raise ValueError(f"YAML file '{path}' must contain a mapping at the top level")
+                return content
+        except yaml.YAMLError as exc:
+            raise ValueError(f"Invalid YAML in '{path}': {exc}") from exc
 
     def _validate_against_schema(self) -> None:
         """Validate configuration data against JSON schema."""
